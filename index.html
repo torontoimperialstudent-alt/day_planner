@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Мій день — планувальник</title>
+<style>
+:root{--bg:#f6f4ef;--card:#fff;--tx:#1d2330;--mu:#6b7385;--ac:#3d5afe;--ac2:#e8ecff;--bd:#e3e0d8;--ok:#1f9d63;--dg:#d64545;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);color-scheme:light}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#12151c;--card:#1b2029;--tx:#eceff6;--mu:#98a1b5;--ac:#7c93ff;--ac2:#252c45;--bd:#2b3240;--ok:#4cc38a;--dg:#ff7a7a;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#12151c;--card:#1b2029;--tx:#eceff6;--mu:#98a1b5;--ac:#7c93ff;--ac2:#252c45;--bd:#2b3240;--ok:#4cc38a;--dg:#ff7a7a;color-scheme:dark}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--tx);font:16px/1.45 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+main{max-width:760px;margin:0 auto;padding:16px}
+h1{font-size:26px;margin:4px 0 2px}h2{font-size:18px;margin:0 0 10px}
+.card{background:var(--card);border:1px solid var(--bd);border-radius:16px;padding:16px;margin-bottom:14px}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.grow{flex:1;min-width:120px}
+input,select,textarea,button{font:inherit;color:var(--tx)}
+input,select,textarea{background:var(--bg);border:1px solid var(--bd);border-radius:10px;padding:9px 10px;max-width:100%}
+textarea{width:100%;min-height:120px;resize:vertical}
+button{background:var(--ac2);border:0;border-radius:10px;padding:9px 13px;cursor:pointer;color:var(--ac);font-weight:600}
+button.p{background:var(--ac);color:#fff}
+button.g{background:none;color:var(--mu);padding:6px 8px}
+.mu{color:var(--mu);font-size:14px}
+.bar{height:8px;background:var(--bd);border-radius:6px;overflow:hidden;margin-top:8px}
+.bar i{display:block;height:100%;background:var(--ok);width:0;transition:width .3s}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{background:var(--bg);border:1px solid var(--bd);color:var(--tx);font-weight:500}
+.task{display:flex;gap:10px;align-items:flex-start;padding:10px 0;border-top:1px solid var(--bd)}
+.task:first-child{border-top:0}
+.task.done .t{text-decoration:line-through;color:var(--mu)}
+.task input[type=time]{width:94px;padding:5px 6px}
+.task input[type=checkbox]{width:22px;height:22px;margin-top:6px;accent-color:var(--ok)}
+.t{flex:1;padding-top:6px;word-break:break-word}
+.th{width:110px;max-width:100%;border-radius:10px;display:block;margin-top:6px}
+.feed{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px;margin-top:12px}
+.post{border:1px solid var(--bd);border-radius:12px;overflow:hidden;background:var(--bg)}
+.post img{width:100%;display:block;aspect-ratio:4/3;object-fit:cover}
+.post div{padding:8px 10px}
+.empty{color:var(--mu);text-align:center;padding:14px 0}
+</style>
+</head>
+<body>
+<main>
+  <div class="row" style="justify-content:space-between">
+    <div><h1>Мій день</h1><div class="mu" id="dl"></div></div>
+    <div class="row"><button id="pv">←</button><button id="td">Сьогодні</button><button id="nx">→</button></div>
+  </div>
+  <div class="card" style="margin-top:12px">
+    <div class="row" style="justify-content:space-between"><b id="pc">0%</b><span class="mu" id="pt"></span></div>
+    <div class="bar"><i id="pb"></i></div>
+  </div>
+
+  <div class="card">
+    <h2>✨ Автозаповнення дня</h2>
+    <div class="row">
+      <select id="mode" class="grow">
+        <option value="work">Робочий день</option>
+        <option value="focus">Глибока робота</option>
+        <option value="weekend">Вихідний</option>
+        <option value="rest">Відновлення</option>
+      </select>
+      <label class="mu">Початок: <input type="time" id="start" value="08:00"></label>
+      <button class="p" id="fill">Заповнити</button>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="row" style="justify-content:space-between"><h2 style="margin:0">💡 Ідеї на день</h2><button id="more">Інші ідеї</button></div>
+    <div class="chips" id="ideas" style="margin-top:10px"></div>
+    <div class="mu" style="margin-top:8px">Натисніть на ідею — вона додасться в план на вільний час.</div>
+  </div>
+
+  <div class="card">
+    <h2>📋 План</h2>
+    <div id="list"></div>
+    <div class="row" style="margin-top:10px">
+      <input type="time" id="nt" value="12:00">
+      <input id="nx2" class="grow" placeholder="Нова справа…" maxlength="120">
+      <button class="p" id="add">Додати</button>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>📸 Фото та публікації</h2>
+    <div class="row">
+      <input type="file" id="file" accept="image/*" class="grow">
+      <input id="cap" class="grow" placeholder="Підпис до фото" maxlength="140">
+      <button class="p" id="pub">Опублікувати</button>
+    </div>
+    <div class="feed" id="feed"></div>
+  </div>
+
+  <div class="card">
+    <h2>💬 Домовитись зі знайомим</h2>
+    <div class="row" style="margin-bottom:8px">
+      <input id="fn" class="grow" placeholder="Ім’я знайомого">
+      <input id="fc" class="grow" placeholder="Телефон або e-mail">
+    </div>
+    <textarea id="msg"></textarea>
+    <div class="row" style="margin-top:8px">
+      <button id="rg">Оновити з плану</button>
+      <button class="p" id="tg">Telegram</button>
+      <button class="p" id="wa">WhatsApp</button>
+      <button id="sm">SMS</button>
+      <button id="em">E-mail</button>
+      <button id="cp">Копіювати</button>
+    </div>
+    <div class="mu" id="note" style="margin-top:8px"></div>
+  </div>
+</main>
+
+<script>
+const $=s=>document.querySelector(s);
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const KEY='planner-v1';
+let S={plans:{},feed:[],friend:{name:'',contact:''}};
+try{const r=localStorage.getItem(KEY);if(r)S=Object.assign(S,JSON.parse(r))}catch(e){}
+function save(){try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){alert('Не вдалося зберегти: можливо, закінчилось місце (великі фото).')}}
+const iso=d=>d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+let cur=new Date();
+const day=()=>iso(cur);
+const tasks=()=>S.plans[day()]||(S.plans[day()]=[]);
+const uid=()=>Math.random().toString(36).slice(2,9);
+const mm=t=>{const[h,m]=t.split(':').map(Number);return h*60+m};
+const hm=n=>{n=((n%1440)+1440)%1440;return String(Math.floor(n/60)).padStart(2,'0')+':'+String(n%60).padStart(2,'0')};
+
+const TPL={
+work:[[0,'☕ Сніданок і планування дня'],[60,'🎯 Найважливіша задача'],[180,'📧 Пошта та повідомлення'],[240,'🍽 Обід і прогулянка'],[330,'💻 Другий блок роботи'],[450,'📝 Підсумки дня'],[540,'🏃 Спорт або прогулянка'],[660,'📖 Читання перед сном']],
+focus:[[0,'🧘 Розминка і вода'],[30,'🎯 Блок глибокої роботи №1 (90 хв)'],[150,'☕ Перерва без телефону'],[180,'🎯 Блок глибокої роботи №2 (90 хв)'],[300,'🍽 Обід'],[360,'📧 Легкі справи і пошта'],[450,'📚 Навчання 45 хв'],[540,'🚶 Вечірня прогулянка']],
+weekend:[[0,'🥞 Неспішний сніданок'],[90,'🧹 Швидке прибирання (30 хв)'],[180,'🌳 Прогулянка або поїздка'],[300,'🍝 Обід зі знайомими'],[420,'🎨 Хобі або творчість'],[600,'🎬 Вечір із фільмом'],[720,'📵 Відпочинок без екранів']],
+rest:[[0,'🛌 Повільний початок'],[60,'🫖 Чай і тиша'],[150,'🚶 Легка прогулянка'],[270,'🥗 Легкий обід'],[360,'📖 Книга або подкаст'],[480,'🛁 Тепла ванна'],[600,'😴 Раннє сном']]
+};
+const IDEAS=['🚶 Прогулянка 30 хвилин','📞 Подзвонити другу','🧘 10 хвилин медитації','📚 Прочитати 20 сторінок','🍳 Приготувати нову страву','🧹 Розібрати один ящик','✍️ Написати 3 вдячності','🎧 Послухати новий подкаст','📷 Зробити фото дня','🌿 Полити рослини','💧 Випити 2 л води','🗂 Розібрати файли на ПК','🎨 Намалювати щось','🏋️ Зарядка 15 хвилин','☕ Кава з колегою','🎲 Настільна гра з друзями','📝 План на тиждень','🌇 Зустріти захід сонця','🛒 Сходити на ринок','💌 Написати давньому знайомому'];
+
+function render(){
+  const t=tasks().slice().sort((a,b)=>mm(a.time)-mm(b.time));
+  S.plans[day()]=t;
+  $('#dl').textContent=cur.toLocaleDateString('uk-UA',{weekday:'long',day:'numeric',month:'long'});
+  const done=t.filter(x=>x.done).length,p=t.length?Math.round(done/t.length*100):0;
+  $('#pc').textContent=p+'%';$('#pb').style.width=p+'%';
+  $('#pt').textContent=t.length?`Виконано ${done} з ${t.length}`:'Поки порожньо';
+  $('#list').innerHTML=t.length?t.map(x=>`<div class="task ${x.done?'done':''}" data-id="${x.id}">
+    <input type="checkbox" data-a="chk" ${x.done?'checked':''}>
+    <input type="time" data-a="time" value="${x.time}">
+    <div class="t">${esc(x.text)}${x.photo?`<img class="th" src="${x.photo}" alt="">`:''}</div>
+    <div class="row" style="gap:2px;flex-direction:column;align-items:flex-end">
+      <button class="g" data-a="ph">📎</button>${x.photo?'<button class="g" data-a="pp">Опублікувати</button>':''}<button class="g" data-a="del">✕</button></div></div>`).join(''):'<div class="empty">Додайте справу або натисніть «Заповнити»</div>';
+  $('#feed').innerHTML=S.feed.length?S.feed.map(f=>`<div class="post" data-id="${f.id}"><img src="${f.img}" alt=""><div><div>${esc(f.cap||'Без підпису')}</div><div class="mu">${esc(f.date)} <button class="g" data-a="dp">Видалити</button></div></div></div>`).join(''):'<div class="empty" style="grid-column:1/-1">Тут з’являться ваші публікації</div>';
+  save();
+}
+function nextFree(){const t=tasks();let n=mm('09:00');while(t.some(x=>x.time===hm(n)))n+=30;return hm(n)}
+function addTask(text,time){tasks().push({id:uid(),time:time||nextFree(),text,done:false});render();msgGen()}
+
+let ideaSet=[];
+function ideas(){ideaSet=IDEAS.slice().sort(()=>Math.random()-.5).slice(0,6);$('#ideas').innerHTML=ideaSet.map((x,i)=>`<button class="chip" data-i="${i}">${esc(x)}</button>`).join('')}
+$('#ideas').onclick=e=>{const b=e.target.closest('[data-i]');if(b)addTask(ideaSet[b.dataset.i])};
+$('#more').onclick=ideas;
+
+$('#fill').onclick=()=>{
+  if(tasks().length&&!confirm('Замінити поточний план автозаповненням?'))return;
+  const s=mm($('#start').value||'08:00');
+  S.plans[day()]=TPL[$('#mode').value].map(([o,x])=>({id:uid(),time:hm(s+o),text:x,done:false}));
+  render();msgGen();
+};
+$('#add').onclick=()=>{const v=$('#nx2').value.trim();if(!v)return;addTask(v,$('#nt').value||undefined);$('#nx2').value=''};
+$('#nx2').onkeydown=e=>{if(e.key==='Enter')$('#add').click()};
+$('#pv').onclick=()=>{cur.setDate(cur.getDate()-1);render();msgGen()};
+$('#nx').onclick=()=>{cur.setDate(cur.getDate()+1);render();msgGen()};
+$('#td').onclick=()=>{cur=new Date();render();msgGen()};
+
+let targetId=null;
+const picker=document.createElement('input');picker.type='file';picker.accept='image/*';
+function shrink(file,max=800){return new Promise((res,rej)=>{const r=new FileReader();r.onerror=rej;r.onload=()=>{const im=new Image();im.onerror=rej;im.onload=()=>{const k=Math.min(1,max/Math.max(im.width,im.height));const c=document.createElement('canvas');c.width=im.width*k;c.height=im.height*k;c.getContext('2d').drawImage(im,0,0,c.width,c.height);res(c.toDataURL('image/jpeg',.72))};im.src=r.result};r.readAsDataURL(file)})}
+picker.onchange=async()=>{const f=picker.files[0];picker.value='';if(!f||!targetId)return;const x=tasks().find(t=>t.id===targetId);if(x){x.photo=await shrink(f,500);render()}};
+function publish(img,cap){S.feed.unshift({id:uid(),img,cap,date:new Date().toLocaleDateString('uk-UA')});render()}
+$('#list').onclick=e=>{
+  const b=e.target.closest('[data-a]');if(!b)return;const id=b.closest('.task').dataset.id,x=tasks().find(t=>t.id===id);
+  const a=b.dataset.a;
+  if(a==='chk'){x.done=b.checked;render()}
+  else if(a==='del'){S.plans[day()]=tasks().filter(t=>t.id!==id);render();msgGen()}
+  else if(a==='ph'){targetId=id;picker.click()}
+  else if(a==='pp'){publish(x.photo,x.text.replace(/^\S+\s/,''))}
+};
+$('#list').onchange=e=>{if(e.target.dataset.a==='time'){const x=tasks().find(t=>t.id===e.target.closest('.task').dataset.id);if(x&&e.target.value){x.time=e.target.value;render();msgGen()}}};
+$('#pub').onclick=async()=>{const f=$('#file').files[0];if(!f){alert('Спочатку оберіть фото');return}publish(await shrink(f),$('#cap').value.trim());$('#file').value='';$('#cap').value=''};
+$('#feed').onclick=e=>{const b=e.target.closest('[data-a="dp"]');if(b){S.feed=S.feed.filter(f=>f.id!==b.closest('.post').dataset.id);render()}};
+
+function msgGen(){
+  const t=tasks(),n=$('#fn').value.trim();
+  const d=cur.toLocaleDateString('uk-UA',{weekday:'long',day:'numeric',month:'long'});
+  $('#msg').value=`Привіт${n?', '+n:''}! 👋\nОсь мої плани на ${d}:\n`+(t.length?t.map(x=>`• ${x.time} — ${x.text}`).join('\n'):'• поки вільний день')+`\n\nМоже, зустрінемось або поєднаємо плани? Напиши, який час тобі підходить.`;
+}
+$('#rg').onclick=msgGen;
+['fn','fc'].forEach(id=>$('#'+id).oninput=()=>{S.friend={name:$('#fn').value,contact:$('#fc').value};save();if(id==='fn')msgGen()});
+$('#fn').value=S.friend.name||'';$('#fc').value=S.friend.contact||'';
+const txt=()=>encodeURIComponent($('#msg').value),ct=()=>$('#fc').value.trim();
+const go=u=>window.open(u,'_blank','noopener');
+$('#tg').onclick=()=>go('https://t.me/share/url?url=%20&text='+txt());
+$('#wa').onclick=()=>{const p=ct().replace(/\D/g,'');go('https://wa.me/'+(p.length>=9?p:'')+'?text='+txt())};
+$('#sm').onclick=()=>{location.href='sms:'+ct().replace(/[^\d+]/g,'')+'?&body='+txt()};
+$('#em').onclick=()=>{location.href='mailto:'+(ct().includes('@')?ct():'')+'?subject='+encodeURIComponent('Наші плани')+'&body='+txt()};
+$('#cp').onclick=async()=>{try{await navigator.clipboard.writeText($('#msg').value);$('#note').textContent='Скопійовано ✓'}catch(e){$('#msg').select();$('#note').textContent='Виділено — натисніть «Копіювати» у системі'}};
+
+ideas();render();msgGen();
+</script>
+</body>
+</html>
